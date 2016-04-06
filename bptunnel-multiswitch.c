@@ -45,6 +45,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
+#include "configParser.h"
 
 #if defined (CLOCK_HIGHRES) && !defined (CLOCK_MONOTONIC)
 # define CLOCK_MONOTONIC CLOCK_HIGHRES
@@ -73,18 +74,34 @@ typedef struct{
 } BptestState;
 
 typedef struct {
-	int tun_fd;
-	char *DTNEth;
-	char *ownEid;
-    char *dstEid;
-    char *dstEid2;
-    char *dstEid3;
-    char *dstEid4;
+	int     tun_fd;
+    int     num;
+	char *  DTNEth;
+	char *  ownEid;
+    char ** dstEid;
 
 	BpSAP *sap;
 	Sdr sdr;
 } BpArg;
 
+/**
+ * 给新BpArg结构分配空间
+ */
+BpArg * bpArgNew(int num)
+{
+    BpArg * n;
+
+    n = (BpArg*) calloc(1, sizeof *n);
+
+    if (n){
+        n->num  =   num;
+        n->DTNEth = (char*) calloc(1, sizeof *n->DTNEth);
+        n->ownEid = (char*) calloc(1, sizeof *n->ownEid);
+        n->dstEid = (char*) calloc(num, sizeof *n->dstEid);
+        n->sap    = (BpSAP*) calloc(1, sizeof *n->sap);
+    }
+    return n;
+}
 
 /**
  *  激活接口
@@ -264,7 +281,7 @@ static int tunnel_bpsend( BpSAP sap, Sdr sdr, char *dstEid, const u_char *buf,lo
 	return -1;
 }
 
-static void *ipOverDtn(void *arg){
+static void *ipOverDtn(void *arg, nodeInfo * n){
 	unsigned char buf[4096];
 	int ret;
 	BpArg *bpArg = (BpArg *)arg;
@@ -292,17 +309,22 @@ static void *ipOverDtn(void *arg){
 
 		tempip = inet_ntoa(ip->ip_dst);
 
-		if(strcmp(tempip,"192.168.99.22") == 0)
-			dstEid = bpArg->dstEid; //-t
-		
-		if(strcmp(tempip,"192.168.99.23") == 0)
-			dstEid = bpArg->dstEid2; //-y
+        for (int ix = 0; ix < n->dstNum; ix++){
+            if (strcmp(tempip, n->dstIp[ix]) == 0)
+                dstEid = n->dstEid[ix];
+        }
 
-		if(strcmp(tempip,"192.168.99.24") == 0)	
-			dstEid = bpArg->dstEid3; //-u
+	//	if(strcmp(tempip,"192.168.99.22") == 0)
+	//		dstEid = bpArg->dstEid; //-t
+	//	
+	//	if(strcmp(tempip,"192.168.99.23") == 0)
+	//		dstEid = bpArg->dstEid2; //-y
+
+	//	if(strcmp(tempip,"192.168.99.24") == 0)	
+	//		dstEid = bpArg->dstEid3; //-u
 		
-		if(strcmp(tempip,"192.168.99.29") == 0)	
-			dstEid = bpArg->dstEid4; //-i
+	//	if(strcmp(tempip,"192.168.99.29") == 0)	
+	//		dstEid = bpArg->dstEid4; //-i
 
 		tcp = (struct tcphdr *)(buf + sizeof(struct ip));
 		LOCALPORT = ntohs(tcp->source);
@@ -486,12 +508,12 @@ int	bptunnel(int a1, int a2, int a3, int a4, int a5,
 int	main(int argc, char **argv)
 {
 	char	DTNEth[10] = "";
-	char	 ownSendEid[20] = "";
+	char	ownSendEid[20] = "";
 	char 	ownRecEid[20] = "";
-	char 	dstEid[20] = "";	
-	char 	dstEid2[20] = "";
-	char 	dstEid3[20] = "";	
-	char 	dstEid4[20] = "";
+//	char 	dstEid[20] = "";	
+//	char 	dstEid2[20] = "";
+//	char 	dstEid3[20] = "";	
+//	char 	dstEid4[20] = "";
 	int 	opt;
 	Sdr		sendSdr;  //ptr
 	Sdr		recSdr;  //ptr
@@ -500,6 +522,12 @@ int	main(int argc, char **argv)
 	BpArg *bpSendArg = NULL;
 	BpArg *bpRecArg = NULL;
 	pid_t fpid;
+
+
+    nodeInfo * node;
+    int num = 0;
+    char * pwd;
+    int ix;
 
     int tun; 
     char tun_name[IFNAMSIZ];
@@ -514,7 +542,7 @@ int	main(int argc, char **argv)
     interface_up(tun_name);
 
 
-	while ((opt = getopt(argc, argv, ":hqdv:b:s:t:r:y:u:i:")) >= 0)
+	while ((opt = getopt(argc, argv, ":hqdv:b:s:r:f:n:")) >= 0)
 	{
 		switch (opt)
 		{
@@ -542,20 +570,26 @@ int	main(int argc, char **argv)
 		case 'r':
 			strcpy(ownRecEid, optarg);
 			break;
+        case 'f':
+            pwd = strdup(optarg);
+            break;
+        case 'n':
+            num = (int) optarg;
+            break;
 
-		case 't':
-			strcpy(dstEid, optarg);
-			break;
-		case 'y':
-			strcpy(dstEid2, optarg);
-			break;
-		case 'u':
-			strcpy(dstEid3, optarg);
-			break;
-		case 'i':
-			strcpy(dstEid4, optarg);
-			break;
-		
+	//	case 't':
+	//		strcpy(dstEid, optarg);
+	//		break;
+	//	case 'y':
+	//		strcpy(dstEid2, optarg);
+	//		break;
+	//	case 'u':
+	//		strcpy(dstEid3, optarg);
+	//		break;
+	//	case 'i':
+	//		strcpy(dstEid4, optarg);
+	//		break;
+
 		case 'v':
 			return version();
 			
@@ -568,11 +602,21 @@ int	main(int argc, char **argv)
 	}
 
 
-	if( !ownRecEid[0] || !ownSendEid[0] || !dstEid[0]||!dstEid2[0]||!dstEid3[0]||!dstEid4[0] ){
+	if( !ownRecEid[0] || !ownSendEid[0] || !pwd[0] || !num){
 		usage(argv[0]);
 		exit(EXIT_SUCCESS);
 	}
-	printf("ownRecEid:%s\nownSendEid:%s\ndstEid:%s\n", ownRecEid, ownSendEid, dstEid);
+
+    node = configParser(num, pwd);
+    if (node == NULL){
+        fprintf(stdout, "cannot allocate memory!!");
+        exit(1);
+    }
+	printf("ownRecEid:%s\nownSendEid:%s\n", ownRecEid, ownSendEid);
+    for (ix = 0; ix < num; ix++)
+        printf("dstName:%s, dstEid:%s, dstIp:%s\n",
+                node->dstName[ix], node->dstEid[ix], node->dstIp[ix]);
+
 #endif
 
 //return 0;
@@ -598,19 +642,24 @@ int	main(int argc, char **argv)
 		printf("bp_open done (send)\n");
 		
 	       sendSdr = bp_get_sdr();
-		bpSendArg = (BpArg *)malloc(sizeof(BpArg));
+	//	bpSendArg = (BpArg *)malloc(sizeof(BpArg));
+        bpSendArg = bpArgNew(num);
+
 		if(bpSendArg == NULL) {
 			putErrmsg("Can't malloc bpSendArg!.",(char *)bpSendArg);
 			return -1;
 		}
 		
-		bpSendArg->tun_fd=tun;
+		bpSendArg->tun_fd = tun;
 		bpSendArg->DTNEth = DTNEth;
 		bpSendArg->ownEid = ownSendEid;
-		bpSendArg->dstEid = dstEid;
-		bpSendArg->dstEid2 = dstEid2;
-		bpSendArg->dstEid3 = dstEid3;
-		bpSendArg->dstEid4 = dstEid4;
+
+        for (ix = 0; ix < num; ix++)
+		    bpSendArg->dstEid[ix] = strdup(node->dstEid[ix]);
+	//	bpSendArg->dstEid = dstEid;
+	//	bpSendArg->dstEid2 = dstEid2;
+	//	bpSendArg->dstEid3 = dstEid3;
+	//	bpSendArg->dstEid4 = dstEid4;
 		bpSendArg->sap = &sendSap;
 		bpSendArg->sdr = sendSdr;
 
@@ -646,10 +695,11 @@ int	main(int argc, char **argv)
 		bpRecArg->tun_fd = tun;
 		bpRecArg->DTNEth = DTNEth;
 		bpRecArg->ownEid = ownRecEid;
-		bpRecArg->dstEid = dstEid;
-		bpRecArg->dstEid2 = dstEid2;
-		bpRecArg->dstEid3 = dstEid3;
-		bpRecArg->dstEid4 = dstEid4;
+        for (ix = 0; ix < num; ix++)
+		    bpRecArg->dstEid[ix] = strdup(node->dstEid[ix]);
+	//	bpRecArg->dstEid2 = dstEid2;
+	//	bpRecArg->dstEid3 = dstEid3;
+	//	bpRecArg->dstEid4 = dstEid4;
 		bpRecArg->sap = &recSap;
 		bpRecArg->sdr = recSdr;
 		
