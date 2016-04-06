@@ -38,5 +38,14 @@ typedef enum{
 
 /* Function prototypes -------------------------------------------------------*/
 
+/**
+ * @brief:  Duplicate node config from config file
+ * @param:  num Numbers of nodes
+ * @param:  pwd Config file's path
+ * @return: Pointer to the nodeInfo structure stored the node information
+ */
+
+nodeInfo * configParser(int num, char * pwd);
+
 
 #endif
