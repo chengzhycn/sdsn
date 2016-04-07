@@ -97,7 +97,7 @@ BpArg * bpArgNew(int num)
         n->num  =   num;
         n->DTNEth = (char*) calloc(1, sizeof *n->DTNEth);
         n->ownEid = (char*) calloc(1, sizeof *n->ownEid);
-        n->dstEid = (char*) calloc(num, sizeof *n->dstEid);
+        n->dstEid = (char**) calloc(num, sizeof *n->dstEid);
         n->sap    = (BpSAP*) calloc(1, sizeof *n->sap);
     }
     return n;
@@ -294,7 +294,8 @@ static void *ipOverDtn(void *arg, nodeInfo * n){
 	struct tcphdr *tcp;
 	unsigned short LOCALPORT;
 	char *tempip;
-	
+	int ix;
+
 	while(1)
 	{	
 		//bzero(tempip, sizeof(tempip));
@@ -309,7 +310,7 @@ static void *ipOverDtn(void *arg, nodeInfo * n){
 
 		tempip = inet_ntoa(ip->ip_dst);
 
-        for (int ix = 0; ix < n->dstNum; ix++){
+        for (ix = 0; ix < n->dstNum; ix++){
             if (strcmp(tempip, n->dstIp[ix]) == 0)
                 dstEid = n->dstEid[ix];
         }
@@ -526,7 +527,7 @@ int	main(int argc, char **argv)
 
     nodeInfo * node;
     int num = 0;
-    char * pwd;
+    char * pwd = NULL;
     int ix;
 
     int tun; 
@@ -574,7 +575,7 @@ int	main(int argc, char **argv)
             pwd = strdup(optarg);
             break;
         case 'n':
-            num = (int) optarg;
+            num = (int) *optarg - 48;
             break;
 
 	//	case 't':
@@ -686,7 +687,8 @@ int	main(int argc, char **argv)
 		printf("bp_open done (receive)\n");
 		
 	        recSdr = bp_get_sdr();
-		bpRecArg = (BpArg *)malloc(sizeof(BpArg));
+		//bpRecArg = (BpArg *)malloc(sizeof(BpArg));
+        bpRecArg = bpArgNew(num);
 		if(bpRecArg == NULL) {
 			putErrmsg("Can't malloc bpRecArg!.",(char *)bpRecArg);
 			return -1;
