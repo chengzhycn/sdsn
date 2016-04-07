@@ -665,7 +665,7 @@ int	main(int argc, char **argv)
 		bpSendArg->sdr = sendSdr;
 
 		isignal(SIGINT, handleQuit);
-		ipOverDtn((void *)bpSendArg);
+		ipOverDtn((void *)bpSendArg, node);
 
 		bp_close(sendSap);
 		writeErrmsgMemos();
