@@ -480,7 +480,7 @@ static void usage(const char *name)
 	fprintf(stderr,
 		"Usage V%s: %s [-q] [-d] [-s OWN-SEND-EID] [-r OWN-REC-EID]\n"
 	        "	[-p IP-INTERFACE] [-b DTN-INTERFACE]\n" 
-			"	[-g GATEWAY] [-f MAPTABLE-FILE]\n"
+			"	[-g GATEWAY] [-f CONFIG-PATH] [-n DST-NUM]\n"
 		"\n"
 		"IP over BP PROTO tunnel client and server, surpport IPv4 and IPv6.\n"
 		"The program can let traditional network go through the DTN network\n"
@@ -489,10 +489,8 @@ static void usage(const char *name)
 		"Options:\n"
 		"  -s OWN-SEND-EID       the source EID to send\n"
 		"  -r OWN-REC-EID        the source EID to receive\n"		
-		"  -t DEST-REC-EID		 the destOVS EID1 to receive\n"		
-		"  -y DEST-REC-EID		 the destOVS EID2 to receive\n"		
-		"  -u DEST-REC-EID		 the destOVS EID3 to receive\n"		
-		"  -i DEST-REC-EID		 the destOVS EID4 to receive\n",
+        "  -f CONFIG-PATH        dst-nodes config file's path\n"
+        "  -n DST-NUM            numbers of dst-nodes\n",
 		BP_TUNNEL_VERSION, name);
 }
 
