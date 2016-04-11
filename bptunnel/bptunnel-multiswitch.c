@@ -573,7 +573,7 @@ int	main(int argc, char **argv)
             pwd = strdup(optarg);
             break;
         case 'n':
-            num = (int) *optarg - 48;
+            num = atoi(optarg);
             break;
 
 	//	case 't':
