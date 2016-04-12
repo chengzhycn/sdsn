@@ -56,9 +56,7 @@ def gen_ltpadmin(rc_file, num, host, sort_config):
         f.write("\n")
 
 def gen_ionadmin(rc_file, num, host, matrix):
-    if os.path.exists(rc_file):
-        print ("Warning: %s has existed and will be rewritten!!!" % rc_file)
-    with open(rc_file, 'w') as f:
+    with open(rc_file, 'a') as f:
         f.write('## begin ionadmin\n')
         f.write("1 %s '/root/test/dtn.ionconfig'\n" % host)
         f.write('s\n')
@@ -77,13 +75,27 @@ def gen_ionadmin(rc_file, num, host, matrix):
         f.write('\n')
         for i in range(len(matrix)):
             for j in range(len(matrix[i])):
-                if matrix[i][j]:
+                if matrix[i][j] and i < j:
                     f.write('a range +1 +86400 %d %d %d\n' % (i+1, j+1, matrix[i][j]))
 
         f.write('\n')
         f.write('m production 1000000\n')
         f.write('m consumption 1000000\n')
         f.write('## end ionadmin\n')
+        f.write('\n')
+
+def gen_file(rc_file, sort_config):
+    if os.path.exists(rc_file):
+        print ("Warning: %s has existed and will be rewritten!!!" % rc_file)
+        print ("To be continue?(y/n)")
+        opt = input()
+        if opt == n:
+            os._exit()
+
+    with open(rc_file, 'w') as f:
+        f.write('# ION CONFIGURATION\n')
+        for item in sort_config:
+            f.write('# host%s %s\n' % (item[0], item[1]))
         f.write('\n')
        
 def load_config(config, parser):
@@ -122,6 +134,7 @@ if __name__ == '__main__':
 
     for i in range(1, num+1):
         filename = 'host%s.rc' % i
+        gen_file(filename, sort_config)
         gen_ionadmin(filename, num, i, matrix) 
         gen_ltpadmin(filename, num, i, sort_config)
         gen_bpadmin(filename, num, i)
