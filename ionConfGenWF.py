@@ -119,7 +119,6 @@ def matrix_process(matrix_path):
     return matrix
 
 def dfs_find(matrix, row, column, found_node, deepth, f):
-    print "row=%d column=%d matrix[row][column]=%d" % (row, column, matrix[row][column])
     if found_node.count(matrix[row][column]) != 0:
         return -1;
     if deepth == 0:
