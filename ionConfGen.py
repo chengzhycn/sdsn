@@ -45,7 +45,7 @@ def gen_bpadmin(rc_file, num, host, protocol):
         f.write('a endpoint ipn:%s.2 q\n' % host)
         if protocol == 'ltp':
             f.write('a protocol ltp 1400 100\n')
-            f.write('a induct ltp 1 ltpcli\n')
+            f.write('a induct ltp %s ltpcli\n', % host)
             for i in range(1, num+1):
                 f.write('a outduct ltp %s ltpclo\n' % i)
         else:
@@ -60,7 +60,7 @@ def gen_ltpadmin(rc_file, num, host, sort_config):
         f.write('## begin ltpadmin\n')
         f.write('1 100\n')
         for item in sort_config:
-            f.write("a span %s 100 100 1300 1400 1 'udplso' %s:1113 1000000'\n" % (item[0], item[1]))
+            f.write("a span %s 100 100 1300 1400 1 'udplso %s:1113 1000000'\n" % (item[0], item[1]))
         f.write("s 'udplsi " + sort_config[host-1][1] + ":1113'\n")
         f.write("## end ltpadmin\n")
         f.write("\n")

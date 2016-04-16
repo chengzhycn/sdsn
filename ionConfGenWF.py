@@ -40,7 +40,7 @@ def gen_bpadmin(rc_file, host, config):
         f.write('a endpoint ipn:%s.1 q\n' % host)
         f.write('a endpoint ipn:%s.2 q\n' % host)
         f.write('a protocol ltp 1400 100\n')
-        f.write('a induct ltp 1 ltpcli\n')
+        f.write('a induct ltp %s ltpcli\n' % host)
         for key, value in config.items():
             f.write('a outduct ltp %s ltpclo\n' % key)
         f.write('s' + '\n' + '## end bpadmin\n')
@@ -51,7 +51,7 @@ def gen_ltpadmin(rc_file, host, config):
         f.write('## begin ltpadmin\n')
         f.write('1 100\n')
         for key, value in config.items():
-            f.write("a span %s 100 100 1300 1400 1 'udplso' %s:1113 1000000'\n" % (key, value))
+            f.write("a span %s 100 100 1300 1400 1 'udplso %s:1113 1000000'\n" % (key, value))
         f.write("s 'udplsi " + config.get(str(host)) + ":1113'\n")
         f.write("## end ltpadmin\n")
         f.write("\n")
@@ -73,7 +73,10 @@ def gen_ionadmin(rc_file, matrix, row, column):
         f.write('\n')
 
         found_node = []
-        dfs_find(matrix, row, column, found_node, 3, f)
+        # dfs_find(matrix, row, column, found_node, 3, f)
+        grey_node = {}
+        grey_node.fromkeys(str(matrix[row][column]), (row, column))
+        bfs_find(matrix, found_node, grey_node, 3, f)
 
         f.write('m production 1000000\n')
         f.write('m consumption 1000000\n')
@@ -117,6 +120,37 @@ def matrix_process(matrix_path):
     except Exception as e:
         print ("ERROR: cannot locate matrix file: %s" % e)
     return matrix
+
+def bfs_find(matrix, found_node, grey_node, deepth, f):
+    if deepth != 0:
+        grey_node_copy = grey_node.copy()
+        for key, value in grey_node_copy.items():
+            found_node.append(key)
+            row = value[0]
+            column = value[1]
+            if column != 0 and found_node.count(matrix[row][column-1]) == 0:
+                dfs_print(matrix[row][column], matrix[row][column-1], f)
+                if matrix[row][column-1] not in grey_node:
+                    grey_node.fromkeys(str(matrix[row][column-1]), (row, column-1))
+
+            if column != len(matrix[row])-1 and found_node.count(matrix[row][column+1]) == 0:
+                dfs_print(matrix[row][column], matrix[row][column+1], f)
+                if matrix[row][column+1] not in grey_node:
+                    grey_node.fromkeys(str(matrix[row][column+1]), (row, column+1))
+
+            if found_node.count(matrix[(row-1)%len(matrix)][column]) == 0:
+                dfs_print(matrix[row][column], matrix[(row-1)%len(matrix)][column], f)
+                if matrix[(row-1)%len(matrix)][column] not in grey_node:
+                    grey_node.fromkeys(str(matrix[(row-1)%len(matrix)][column]), ((row-1)%len(matrix), column))
+
+            if found_node.count(matrix[(row+1)%len(matrix)][column]) == 0:
+                dfs_print(matrix[row][column], matrix[(row+1)%len(matrix)][column], f)
+                if matrix[(row+1)%len(matrix)][column] not in grey_node:
+                    grey_node.fromkeys(str(matrix[(row+1)%len(matrix)][column]), ((row+1)%len(matrix), column))
+
+            grey_node.pop(str(key))
+
+        bfs_find(matrix, found_node, grey_node, deepth-1, f)
 
 def dfs_find(matrix, row, column, found_node, deepth, f):
     if found_node.count(matrix[row][column]) != 0:
