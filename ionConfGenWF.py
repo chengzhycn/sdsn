@@ -75,7 +75,7 @@ def gen_ionadmin(rc_file, matrix, row, column):
         found_node = []
         # dfs_find(matrix, row, column, found_node, 3, f)
         grey_node = {}
-        grey_node.fromkeys(str(matrix[row][column]), (row, column))
+        grey_node[matrix[row][column]] = (row, column)
         bfs_find(matrix, found_node, grey_node, 3, f)
 
         f.write('m production 1000000\n')
@@ -122,6 +122,7 @@ def matrix_process(matrix_path):
     return matrix
 
 def bfs_find(matrix, found_node, grey_node, deepth, f):
+    print grey_node 
     if deepth != 0:
         grey_node_copy = grey_node.copy()
         for key, value in grey_node_copy.items():
@@ -131,24 +132,24 @@ def bfs_find(matrix, found_node, grey_node, deepth, f):
             if column != 0 and found_node.count(matrix[row][column-1]) == 0:
                 dfs_print(matrix[row][column], matrix[row][column-1], f)
                 if matrix[row][column-1] not in grey_node:
-                    grey_node.fromkeys(str(matrix[row][column-1]), (row, column-1))
+                    grey_node[matrix[row][column-1]] = (row, column-1)
 
             if column != len(matrix[row])-1 and found_node.count(matrix[row][column+1]) == 0:
                 dfs_print(matrix[row][column], matrix[row][column+1], f)
                 if matrix[row][column+1] not in grey_node:
-                    grey_node.fromkeys(str(matrix[row][column+1]), (row, column+1))
+                    grey_node[matrix[row][column+1]] = (row, column+1)
 
             if found_node.count(matrix[(row-1)%len(matrix)][column]) == 0:
                 dfs_print(matrix[row][column], matrix[(row-1)%len(matrix)][column], f)
                 if matrix[(row-1)%len(matrix)][column] not in grey_node:
-                    grey_node.fromkeys(str(matrix[(row-1)%len(matrix)][column]), ((row-1)%len(matrix), column))
+                    grey_node[matrix[(row-1)%len(matrix)][column]] = ((row-1)%len(matrix), column)
 
             if found_node.count(matrix[(row+1)%len(matrix)][column]) == 0:
                 dfs_print(matrix[row][column], matrix[(row+1)%len(matrix)][column], f)
                 if matrix[(row+1)%len(matrix)][column] not in grey_node:
-                    grey_node.fromkeys(str(matrix[(row+1)%len(matrix)][column]), ((row+1)%len(matrix), column))
+                    grey_node[matrix[(row+1)%len(matrix)][column]] = ((row+1)%len(matrix), column)
 
-            grey_node.pop(str(key))
+            grey_node.pop(key)
 
         bfs_find(matrix, found_node, grey_node, deepth-1, f)
 
