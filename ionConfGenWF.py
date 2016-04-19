@@ -71,6 +71,9 @@ def gen_ionadmin(rc_file, matrix, row, column):
             for j in i:
                 f.write('a range +1 +86400 %s %s 0\n' % (j, j))
         f.write('\n')
+        
+        meo = matrix[row][column] // 10
+        dfs_print(matrix[row][column], meo, f)
 
         found_node = []
         # dfs_find(matrix, row, column, found_node, 3, f)
@@ -122,7 +125,6 @@ def matrix_process(matrix_path):
     return matrix
 
 def bfs_find(matrix, found_node, grey_node, deepth, f):
-    print grey_node 
     if deepth != 0:
         grey_node_copy = grey_node.copy()
         for key, value in grey_node_copy.items():
