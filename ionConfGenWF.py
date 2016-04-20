@@ -73,6 +73,8 @@ def gen_ionadmin(rc_file, matrix, row, column):
         f.write('\n')
         
         meo = matrix[row][column] // 10
+        f.write('a contact +1 +86400 %s %s 1000000\n' % (meo, meo))
+        f.write('a range +1 +86400 %s %s 0\n' % (meo, meo))
         dfs_print(matrix[row][column], meo, f)
 
         found_node = []
