@@ -45,7 +45,7 @@ def gen_bpadmin(rc_file, num, host, protocol):
         f.write('a endpoint ipn:%s.2 q\n' % host)
         if protocol == 'ltp':
             f.write('a protocol ltp 1400 100\n')
-            f.write('a induct ltp %s ltpcli\n', % host)
+            f.write('a induct ltp %s ltpcli\n' % host)
             for i in range(1, num+1):
                 f.write('a outduct ltp %s ltpclo\n' % i)
         else:
